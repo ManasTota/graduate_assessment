@@ -34,10 +34,10 @@ docker run --name taskmaster \
 
 # Dockerfile - build and run
 
-# docker building image
+### Building docker image
 docker build -t flask-app .
 
-# for running the image
+### Running the docker image
 docker run --env-file flask_app/.env -p 5000:5000 flask-app
 
 
@@ -46,13 +46,14 @@ docker run --env-file flask_app/.env -p 5000:5000 flask-app
 
 # Creating a Google Artifact Repository
 
+### Creating a repo
 gcloud artifacts repositories create ericsson --repository-format=docker --location=europe-north2 --description="Ericsson task repository"
 
-# Taging Docker image
+### Taging Docker image
 docker tag flask-app europe-north2-docker.pkg.dev/ericsson-project-465613/ericsson/flask-app:latest
 
-# Auth
+### Auth
 gcloud auth configure-docker europe-north2-docker.pkg.dev
 
-# Pushing image
+### Pushing image
 docker push europe-north2-docker.pkg.dev/ericsson-project-465613/ericsson/flask-app:latest
