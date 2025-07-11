@@ -57,3 +57,14 @@ gcloud auth configure-docker europe-north2-docker.pkg.dev
 
 ### Pushing image
 docker push europe-north2-docker.pkg.dev/ericsson-project-465613/ericsson/flask-app:latest
+
+
+
+# K8s
+
+### Build and Run deployments.yaml
+kubectl apply -f deployment.yaml
+kubectl get svc --> use external ip and port for flask app
+
+### Creating Secrets file using .env
+kubectl create secret generic app-secrets --from-env-file=.env.deployment
