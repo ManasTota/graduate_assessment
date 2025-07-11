@@ -7,11 +7,20 @@ from dotenv import load_dotenv
 
 app = Flask(__name__)
 
-load_dotenv('.env')
+load_dotenv('.env.deployment')
 
-# Database configuration
+
+POSTGRES_USER = os.environ.get("POSTGRES_USER")
+POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
+POSTGRES_DB = os.environ.get("POSTGRES_DB")
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST")
+POSTGRES_PORT = os.environ.get("POSTGRES_PORT")
+print(f"{POSTGRES_DB} /t {POSTGRES_HOST} /t {POSTGRES_PORT} /t {POSTGRES_USER} /t {POSTGRES_PASSWORD}")
+
 DATABASE_URL = os.environ.get(
-    'DATABASE_URL', 'postgresql://username:password@localhost/crud_db')
+    "DATABASE_URL",
+    f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+)
 
 
 def get_db_connection():
