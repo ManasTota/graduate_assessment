@@ -73,3 +73,29 @@ kubectl create secret generic app-secrets --from-env-file=.env.deployment
 
 # Created Makefile
 using all the important commands from above - like Build, tag, push, deploy etc
+
+
+
+
+# Helm for Prometheus and Grafana
+
+### Installing prometheus
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+### Adding promethues 
+helm install prometheus prometheus-community/kube-prometheus-stack --values values_prometheus.yaml
+
+
+
+# Accessing Prometheus and Grafana
+
+### Promotheus
+kubectl port-forward svc/prometheus-kube-prometheus-prometheus 9090:9090
+website - http://localhost:9090
+
+### Grafana
+kubectl port-forward svc/prometheus-grafana 3000:80
+website - http://localhost:3000
+username - admin
+password - admin123
