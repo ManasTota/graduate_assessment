@@ -1,10 +1,12 @@
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify, render_template_string, Response, g
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
 from datetime import datetime
 from dotenv import load_dotenv
 import logging
+from prometheus_client import Counter, Histogram, Gauge, generate_latest
+import time
 
 app = Flask(__name__)
 
@@ -25,6 +27,45 @@ DATABASE_URL = os.environ.get(
     "DATABASE_URL",
     f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 )
+
+
+# Prometheus metrics
+REQUEST_COUNT = Counter('flask_requests_total',
+                        'Total Flask requests', ['method', 'endpoint'])
+REQUEST_LATENCY = Histogram(
+    'flask_request_duration_seconds', 'Flask request duration')
+ACTIVE_CONNECTIONS = Gauge('flask_active_connections',
+                           'Active connections to Flask app')
+
+
+@app.before_request
+def before_request():
+    g.start_time = time.time()
+    ACTIVE_CONNECTIONS.inc()
+
+
+@app.after_request
+def after_request(response):
+    REQUEST_COUNT.labels(method=request.method,
+                         endpoint=request.endpoint).inc()
+    REQUEST_LATENCY.observe(time.time() - g.start_time)
+    ACTIVE_CONNECTIONS.dec()
+    return response
+
+
+@app.route('/metrics')
+def metrics():
+    return Response(generate_latest(), mimetype='text/plain')
+
+
+@app.route('/health')
+def health():
+    return {'status': 'healthy'}
+
+
+@app.route('/ready')
+def ready():
+    return {'status': 'ready'}
 
 
 def get_db_connection():
