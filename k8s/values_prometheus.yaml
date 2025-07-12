@@ -1,0 +1,227 @@
+# values-prometheus.yaml
+# Prometheus configuration using kube-prometheus-stack Helm chart
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Prometheus configuration
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+    
+    # Additional scrape configs for Flask app
+    additionalScrapeConfigs:
+      - job_name: 'flask-app'
+        static_configs:
+          - targets: ['flask-app-service:5000']
+        metrics_path: '/metrics'
+        scrape_interval: 30s
+      
+      - job_name: 'postgres-exporter'
+        static_configs:
+          - targets: ['postgres-exporter:9187']
+        scrape_interval: 30s
+
+# Grafana configuration
+grafana:
+  enabled: true
+  adminPassword: "admin123"
+  
+  # Enable persistence for Grafana data
+  persistence:
+    enabled: true
+    size: 1Gi
+  
+  # REMOVE OR COMMENT OUT THIS ENTIRE 'datasources' SECTION
+  # Configure datasources
+  # datasources:
+  #   datasources.yaml:
+  #     apiVersion: 1
+  #     datasources:
+  #       - name: Prometheus
+  #         type: prometheus
+  #         url: http://prometheus-server:9090
+  #         access: proxy
+  #         isDefault: true
+  
+  # Import default dashboards
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: 'default'
+          orgId: 1
+          folder: ''
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/default
+  
+  # Custom dashboards
+  dashboards:
+    default:
+      flask-app-dashboard:
+        gnetId: 0
+        datasource: Prometheus # Make sure this matches the name of the *chart-provisioned* Prometheus datasource
+        json: |
+          {
+            "dashboard": {
+              "id": null,
+              "title": "Flask Application Monitoring",
+              "tags": ["flask", "monitoring"],
+              "timezone": "browser",
+              "panels": [
+                {
+                  "id": 1,
+                  "title": "Pod Status",
+                  "type": "stat",
+                  "targets": [
+                    {
+                      "expr": "up{job=\"flask-app\"}",
+                      "legendFormat": "{{instance}}"
+                    }
+                  ],
+                  "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+                  "fieldConfig": {
+                    "defaults": {
+                      "color": {"mode": "palette-classic"},
+                      "custom": {"displayMode": "list", "orientation": "auto"},
+                      "mappings": [
+                        {"options": {"0": {"text": "Down", "color": "red"}}, "type": "value"},
+                        {"options": {"1": {"text": "Up", "color": "green"}}, "type": "value"}
+                      ]
+                    }
+                  }
+                },
+                {
+                  "id": 2,
+                  "title": "CPU Usage",
+                  "type": "graph",
+                  "targets": [
+                    {
+                      "expr": "rate(container_cpu_usage_seconds_total{pod=~\"flask-app.*\"}[5m]) * 100",
+                      "legendFormat": "{{pod}}"
+                    }
+                  ],
+                  "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+                  "yAxes": [
+                    {"label": "CPU %", "min": 0, "max": 100}
+                  ]
+                },
+                {
+                  "id": 3,
+                  "title": "Memory Usage",
+                  "type": "graph",
+                  "targets": [
+                    {
+                      "expr": "container_memory_usage_bytes{pod=~\"flask-app.*\"} / 1024 / 1024",
+                      "legendFormat": "{{pod}}"
+                    }
+                  ],
+                  "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+                  "yAxes": [
+                    {"label": "Memory (MB)", "min": 0}
+                  ]
+                },
+                {
+                  "id": 4,
+                  "title": "PostgreSQL Connections",
+                  "type": "graph",
+                  "targets": [
+                    {
+                      "expr": "pg_stat_database_numbackends{datname=\"your_db_name\"}",
+                      "legendFormat": "Active Connections"
+                    }
+                  ],
+                  "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+                }
+              ],
+              "time": {"from": "now-1h", "to": "now"},
+              "refresh": "30s"
+            }
+          }
+
+# Alertmanager configuration
+alertmanager:
+  enabled: true
+  config:
+    global:
+      smtp_smarthost: 'localhost:587'
+      smtp_from: 'alerts@yourcompany.com'
+    
+    route:
+      group_by: ['alertname']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'web.hook'
+    
+    receivers:
+      - name: 'web.hook'
+        email_configs:
+          - to: 'admin@yourcompany.com'
+            subject: 'Alert: {{ .GroupLabels.alertname }}'
+            body: |
+              {{ range .Alerts }}
+              Alert: {{ .Annotations.summary }}
+              Description: {{ .Annotations.description }}
+              {{ end }}
+
+# Custom alerting rules
+additionalPrometheusRulesMap:
+  flask-app-alerts:
+    groups:
+      - name: flask-app.rules
+        rules:
+          - alert: FlaskAppDown
+            expr: up{job="flask-app"} == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Flask application is down"
+              description: "Flask application has been down for more than 1 minute"
+          
+          - alert: HighCPUUsage
+            expr: rate(container_cpu_usage_seconds_total{pod=~"flask-app.*"}[5m]) * 100 > 80
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High CPU usage detected"
+              description: "CPU usage is above 80% for more than 5 minutes"
+          
+          - alert: HighMemoryUsage
+            expr: container_memory_usage_bytes{pod=~"flask-app.*"} / container_spec_memory_limit_bytes{pod=~"flask-app.*"} * 100 > 80
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High memory usage detected"
+              description: "Memory usage is above 80% for more than 5 minutes"
+          
+          - alert: PostgreSQLDown
+            expr: up{job="postgres-exporter"} == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "PostgreSQL is down"
+              description: "PostgreSQL database has been down for more than 1 minute"
+          
+          - alert: PostgreSQLHighConnections
+            expr: pg_stat_database_numbackends / pg_settings_max_connections * 100 > 80
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "PostgreSQL high connection usage"
+              description: "PostgreSQL is using more than 80% of available connections"
