@@ -68,3 +68,8 @@ kubectl get svc --> use external ip and port for flask app
 
 ### Creating Secrets file using .env
 kubectl create secret generic app-secrets --from-env-file=.env.deployment
+
+
+
+# Created Makefile
+using all the important commands from above - like Build, tag, push, deploy etc
