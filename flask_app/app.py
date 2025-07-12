@@ -4,10 +4,14 @@ from psycopg2.extras import RealDictCursor
 import os
 from datetime import datetime
 from dotenv import load_dotenv
+import logging
 
 app = Flask(__name__)
 
 load_dotenv('.env.deployment')
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 POSTGRES_USER = os.environ.get("POSTGRES_USER")
@@ -254,6 +258,7 @@ def create_task():
 
         return jsonify(dict(task)), 201
     except Exception as e:
+        logger.exception("Error in create_task")
         return jsonify({'error': str(e)}), 500
 
 # READ - Get all tasks
@@ -361,6 +366,7 @@ def delete_task(task_id):
         return jsonify({'error': str(e)}), 500
 
 
+init_db()
+
 if __name__ == '__main__':
-    init_db()
     app.run(debug=True)
