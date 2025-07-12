@@ -28,26 +28,33 @@ DATABASE_URL = os.environ.get(
 
 
 def get_db_connection():
+    logger.info("Establishing database connection")
     conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+    logger.info("Database connection established")
     return conn
 
 
 def init_db():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS tasks (
-            id SERIAL PRIMARY KEY,
-            title VARCHAR(255) NOT NULL,
-            description TEXT,
-            completed BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    conn.commit()
-    cur.close()
-    conn.close()
+    logger.info("Initializing database and creating tables if not exist")
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS tasks (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                completed BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        conn.commit()
+        logger.info("Database initialized successfully")
+        cur.close()
+        conn.close()
+    except Exception as e:
+        logger.exception("Error initializing database: %s", e)
 
 
 # HTML template for the frontend
@@ -230,6 +237,7 @@ HTML_TEMPLATE = '''
 
 @app.route('/')
 def index():
+    logger.info("Rendering main HTML page")
     return render_template_string(HTML_TEMPLATE)
 
 # CREATE - Add a new task
@@ -237,11 +245,13 @@ def index():
 
 @app.route('/api/tasks', methods=['POST'])
 def create_task():
+    logger.info("Received request to create a new task")
     data = request.get_json()
     title = data.get('title')
     description = data.get('description', '')
 
     if not title:
+        logger.warning("Task creation failed: Title is required")
         return jsonify({'error': 'Title is required'}), 400
 
     try:
@@ -253,12 +263,12 @@ def create_task():
         )
         task = cur.fetchone()
         conn.commit()
+        logger.info("Task created successfully: %s", task)
         cur.close()
         conn.close()
-
         return jsonify(dict(task)), 201
     except Exception as e:
-        logger.exception("Error in create_task")
+        logger.exception("Error in create_task: %s", e)
         return jsonify({'error': str(e)}), 500
 
 # READ - Get all tasks
@@ -266,16 +276,18 @@ def create_task():
 
 @app.route('/api/tasks', methods=['GET'])
 def get_tasks():
+    logger.info("Received request to get all tasks")
     try:
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute('SELECT * FROM tasks ORDER BY created_at DESC')
         tasks = cur.fetchall()
+        logger.info("Fetched %d tasks", len(tasks))
         cur.close()
         conn.close()
-
         return jsonify([dict(task) for task in tasks])
     except Exception as e:
+        logger.exception("Error fetching tasks: %s", e)
         return jsonify({'error': str(e)}), 500
 
 # READ - Get a specific task
@@ -283,6 +295,7 @@ def get_tasks():
 
 @app.route('/api/tasks/<int:task_id>', methods=['GET'])
 def get_task(task_id):
+    logger.info("Received request to get task with id %d", task_id)
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -290,12 +303,14 @@ def get_task(task_id):
         task = cur.fetchone()
         cur.close()
         conn.close()
-
         if task:
+            logger.info("Task found: %s", task)
             return jsonify(dict(task))
         else:
+            logger.warning("Task with id %d not found", task_id)
             return jsonify({'error': 'Task not found'}), 404
     except Exception as e:
+        logger.exception("Error fetching task: %s", e)
         return jsonify({'error': str(e)}), 500
 
 # UPDATE - Update a task
@@ -303,25 +318,22 @@ def get_task(task_id):
 
 @app.route('/api/tasks/<int:task_id>', methods=['PUT'])
 def update_task(task_id):
+    logger.info("Received request to update task with id %d", task_id)
     data = request.get_json()
-
-    # Build dynamic update query
     updates = []
     values = []
 
     if 'title' in data:
         updates.append('title = %s')
         values.append(data['title'])
-
     if 'description' in data:
         updates.append('description = %s')
         values.append(data['description'])
-
     if 'completed' in data:
         updates.append('completed = %s')
         values.append(data['completed'])
-
     if not updates:
+        logger.warning("No fields to update for task id %d", task_id)
         return jsonify({'error': 'No fields to update'}), 400
 
     updates.append('updated_at = CURRENT_TIMESTAMP')
@@ -336,12 +348,14 @@ def update_task(task_id):
         conn.commit()
         cur.close()
         conn.close()
-
         if task:
+            logger.info("Task updated successfully: %s", task)
             return jsonify(dict(task))
         else:
+            logger.warning("Task with id %d not found for update", task_id)
             return jsonify({'error': 'Task not found'}), 404
     except Exception as e:
+        logger.exception("Error updating task: %s", e)
         return jsonify({'error': str(e)}), 500
 
 # DELETE - Delete a task
@@ -349,6 +363,7 @@ def update_task(task_id):
 
 @app.route('/api/tasks/<int:task_id>', methods=['DELETE'])
 def delete_task(task_id):
+    logger.info("Received request to delete task with id %d", task_id)
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -357,12 +372,14 @@ def delete_task(task_id):
         conn.commit()
         cur.close()
         conn.close()
-
         if task:
+            logger.info("Task deleted successfully: %s", task)
             return jsonify({'message': 'Task deleted successfully'})
         else:
+            logger.warning("Task with id %d not found for deletion", task_id)
             return jsonify({'error': 'Task not found'}), 404
     except Exception as e:
+        logger.exception("Error deleting task: %s", e)
         return jsonify({'error': str(e)}), 500
 
 
