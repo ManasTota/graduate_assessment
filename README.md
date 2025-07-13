@@ -51,6 +51,13 @@ gcloud components install gke-gcloud-auth-plugin
 * Database - ```PostgreSQL```
 * [Code](https://github.com/ManasTota/graduate_assessment/blob/main/flask_app/app.py)
 
+
+
+https://github.com/user-attachments/assets/5c1913f6-965e-4abf-a4aa-9ca126e22e97
+
+
+
+
 ### Docker
 #### 1. Creating PostgreSQL in a Docker container
     
