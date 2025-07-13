@@ -173,7 +173,7 @@ We have flask app running at ```http://34.51.213.66:5000```
     password - ```admin123```
 
 
-[!prometheus1](https://github.com/ManasTota/graduate_assessment/blob/main/imgs/Prometheus1.png)
+![Prometheus1](https://github.com/ManasTota/graduate_assessment/blob/main/imgs/Prometheus1.png)
 
 
 ## Task 4 - Shell Scripting and Python Automation
