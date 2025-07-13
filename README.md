@@ -84,14 +84,16 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 
 ### Adding promethues 
-helm install prometheus prometheus-community/kube-prometheus-stack --values values_prometheus.yaml
+<!-- helm install prometheus prometheus-community/kube-prometheus-stack --values k8s/values_prometheus.yaml -->
 
+helm install tutorial bitnami/kube-prometheus --version 8.2.2 --values k8s/values_prometheus.yaml
 
 
 # Accessing Prometheus and Grafana
 
 ### Promotheus
-kubectl port-forward svc/prometheus-kube-prometheus-prometheus 9090:9090
+<!-- kubectl port-forward svc/prometheus-kube-prometheus-prometheus 9090:9090 -->
+kubectl port-forward svc/tutorial-kube-prometheus-prometheus 9090:9090
 website - http://localhost:9090
 
 ### Grafana
@@ -99,3 +101,117 @@ kubectl port-forward svc/prometheus-grafana 3000:80
 website - http://localhost:3000
 username - admin
 password - admin123
+
+
+
+
+
+
+# Task 4 - Shell scripting and Python automation
+
+### Monitoring - moniter.sh
+chmod +x moniter.sh
+./monitoring/moniter.sh [pod_name]
+
+
+### Prometheus_query.py
+
+#### First make sure prometheus is running in http://localhost:9090
+kubectl port-forward svc/tutorial-kube-prometheus-prometheus 9090:9090
+
+#### Run the py script
+python monitoring/prometheus_query.py [pod_name]
+
+
+
+
+# Task 5 - CI/CD Pipeline Jenkins
+
+### Insalling Jenkins via Helm
+helm repo add jenkins https://charts.jenkins.io
+helm repo update
+
+helm install jenkins jenkins/jenkins -f k8s/jenkins_values.yaml --wait
+
+Get your 'admin' user password by running:
+kubectl exec --namespace default $(kubectl get pods --namespace default -l app.kubernetes.io/component=jenkins-controller -o jsonpath='{.items[0].metadata.name}') -- sh -c 'cat /run/secrets/additional/chart-admin-password'
+
+Username = admin
+PWD = AFfOaYWg8iyfNM6j9ZtbF3
+
+accessing jenkins
+externalip:8080
+
+
+
+
+# Create service account for ci cd artifact
+gcloud iam service-accounts create github-actions-service-account \
+ --description="A service account for use in a GitHub Actions workflow" \
+ --display-name="GitHub Actions service account."
+
+
+### adding permission to service account
+gcloud artifacts repositories add-iam-policy-binding ericsson \
+  --location=europe-north2 \
+  --role=roles/artifactregistry.createOnPushWriter \
+  --member=serviceAccount:github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com
+
+### Create a workload identity pool
+gcloud iam workload-identity-pools create "flask-app-dev-pool" \
+  --project=ericsson-project-465613 \
+  --location=global \
+  --display-name="Identity pool for my flask app"
+
+
+### Create a workload identity pool provider
+gcloud iam workload-identity-pools providers create-oidc "github-actions-provider" \
+  --location="global" \
+  --workload-identity-pool="flask-app-dev-pool" \
+  --display-name="Provider for GitHub Actions" \
+  --issuer-uri="https://token.actions.githubusercontent.com" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
+  --attribute-condition="attribute.repository_owner=='ManasTota' && attribute.repository=='graduate_assessment'"
+
+### describing identity pool
+gcloud iam workload-identity-pools providers describe github-actions-provider \
+  --location=global \
+  --workload-identity-pool="flask-app-dev-pool"
+
+output:
+name: projects/1086847771245/locations/global/workloadIdentityPools/flask-app-dev-pool/providers/github-actions-provider
+
+### grant the Service Account Token Creator via a gmail
+gcloud iam service-accounts add-iam-policy-binding \
+  github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com \
+  --role=roles/iam.serviceAccountTokenCreator \
+  --member=user:nantota87@gmail.com
+
+### describing pool
+gcloud iam workload-identity-pools describe "flask-app-dev-pool" \
+  --location=global
+
+output:
+name: projects/1086847771245/locations/global/workloadIdentityPools/flask-app-dev-pool
+
+### exporting as env
+export WIP_POOL=projects/1086847771245/locations/global/workloadIdentityPools/flask-app-dev-pool
+
+
+### binding
+gcloud iam service-accounts add-iam-policy-binding \
+  github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com \
+  --role=roles/iam.workloadIdentityUser \
+  --member=principalSet://iam.googleapis.com/${WIP_POOL}/attribute.repository/ManasTota/graduate_assessment
+
+
+### updating oidc for final check
+gcloud iam workload-identity-pools providers update-oidc \
+  github-actions-provider \
+  --project=ericsson-project-465613 \
+  --location=global \
+  --workload-identity-pool=flask-app-dev-pool \
+  --attribute-condition="assertion.repository_owner == 'ManasTota'"
+
+Output:
+name: projects/1086847771245/locations/global/workloadIdentityPools/flask-app-dev-pool/providers/github-actions-provider/operations/bigar7h2zxbqmehy7hzm2aq000000000
