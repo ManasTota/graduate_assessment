@@ -36,6 +36,10 @@ gcloud components install gke-gcloud-auth-plugin
 
 
 ## Task 2 - Simple CRUD Application
+### Created ```Task Manager``` Application
+* Frontend and Backend - ```Python Flask```
+* Database - ```PostgreSQL```
+* [Code](https://github.com/ManasTota/graduate_assessment/blob/main/flask_app/app.py)
 
 ### Docker
 #### 1. Creating PostgreSQL in a Docker container
@@ -103,7 +107,7 @@ Example ```.env.deployment``` file
 
 #### 2. Kubernetes Manifests
 
-We have Kubernetes Manifests like ```deployment.yaml```
+We have Kubernetes Manifests like ```deployment.yaml``` [here](https://github.com/ManasTota/graduate_assessment/blob/main/k8s/deployment.yaml)
 
 #### 3. Applying Manifests
 
@@ -162,6 +166,7 @@ We have flask app running at ```http://34.51.213.66:5000```
 
 ### Shell - monitor.sh
 Created ```monitor.sh``` to 
+* [Code](https://github.com/ManasTota/graduate_assessment/blob/main/monitoring/moniter.sh)
 * Check memory & CPU usage of a pod
 * Alert if usage exceeds threshold
 
@@ -185,6 +190,7 @@ Alerting (if exceeeds)
 
 ### Python - prometheus_query.py
 Created ```prometheus_query.py``` using
+* [Code](https://github.com/ManasTota/graduate_assessment/blob/main/monitoring/prometheus_query.py)
 * Query Prometheus API
 * Return current CPU usage of a pod in JSON
 
@@ -212,7 +218,7 @@ Created ```prometheus_query.py``` using
 
 ## Task 5 - CI/CD Pipeline Github Actions
 
-### GitHub Actions Workflow (.github/workflows/cicd.yml)
+### GitHub Actions Workflow [.github/workflows/cicd.yml](https://github.com/ManasTota/graduate_assessment/blob/main/.github/workflows/cicd.yml)
 CI/CD - Build, Push to Artifact Registry, and Deploy to GKE
 
 * How the pipeline is triggered:
