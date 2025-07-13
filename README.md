@@ -49,7 +49,7 @@ gcloud components install gke-gcloud-auth-plugin
     
 
 #### 2. Dockerfile
-    We have the Dockerfile here
+    We have the Dockerfile [here](https://github.com/ManasTota/graduate_assessment/blob/main/Dockerfile)
 
 #### 3. Building Dockerfile and running locally
 Building docker image
