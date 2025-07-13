@@ -116,7 +116,7 @@ HTML_TEMPLATE = '''
     </style>
 </head>
 <body>
-    <h1>Task Managerssssss</h1>
+    <h1>Task Manager</h1>
     
     <div id="add-task-form">
         <h2>Add New Task</h2>

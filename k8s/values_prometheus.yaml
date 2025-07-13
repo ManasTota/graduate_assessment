@@ -149,45 +149,45 @@ grafana:
             }
           }
 
-# Alertmanager configuration
-# alertmanager:
-#   enabled: true
-#   config:
-#     global:
-#       smtp_smarthost: 'localhost:587'
-#       smtp_from: 'alerts@yourcompany.com'
-    
-#     route:
-#       group_by: ['alertname']
-#       group_wait: 10s
-#       group_interval: 10s
-#       repeat_interval: 1h
-#       receiver: 'web.hook'
-    
-#     receivers:
-#       - name: 'web.hook'
-#         email_configs:
-#           - to: 'admin@yourcompany.com'
-#             subject: 'Alert: {{ .GroupLabels.alertname }}'
-#             body: |
-#               {{ range .Alerts }}
-#               Alert: {{ .Annotations.summary }}
-#               Description: {{ .Annotations.description }}
-#               {{ end }}
-
+Alertmanager configuration:
 alertmanager:
-  resources:
-    limits:
-      cpu: 250m
-      ephemeral-storage: 1Gi
-      memory: 512Mi
-    requests:
-      cpu: 250m
-      ephemeral-storage: 1Gi
-      memory: 512Mi
-  configSelector:
-    matchLabels:
-      alertmanagerConfig: slack
+  enabled: true
+  config:
+    global:
+      smtp_smarthost: 'localhost:587'
+      smtp_from: 'alerts@yourcompany.com'
+    
+    route:
+      group_by: ['alertname']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'web.hook'
+    
+    receivers:
+      - name: 'web.hook'
+        email_configs:
+          - to: 'admin@yourcompany.com'
+            subject: 'Alert: {{ .GroupLabels.alertname }}'
+            body: |
+              {{ range .Alerts }}
+              Alert: {{ .Annotations.summary }}
+              Description: {{ .Annotations.description }}
+              {{ end }}
+
+# alertmanager:
+#   resources:
+#     limits:
+#       cpu: 250m
+#       ephemeral-storage: 1Gi
+#       memory: 512Mi
+#     requests:
+#       cpu: 250m
+#       ephemeral-storage: 1Gi
+#       memory: 512Mi
+#   configSelector:
+#     matchLabels:
+#       alertmanagerConfig: slack
 
 # Custom alerting rules
 additionalPrometheusRulesMap:

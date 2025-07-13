@@ -84,16 +84,16 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 
 ### Adding promethues 
-<!-- helm install prometheus prometheus-community/kube-prometheus-stack --values k8s/values_prometheus.yaml -->
+helm install prometheus prometheus-community/kube-prometheus-stack --values k8s/values_prometheus.yaml
 
-helm install tutorial bitnami/kube-prometheus --version 8.2.2 --values k8s/values_prometheus.yaml
+<!-- helm install tutorial bitnami/kube-prometheus --version 8.2.2 --values k8s/values_prometheus.yaml -->
 
 
 # Accessing Prometheus and Grafana
 
 ### Promotheus
-<!-- kubectl port-forward svc/prometheus-kube-prometheus-prometheus 9090:9090 -->
-kubectl port-forward svc/tutorial-kube-prometheus-prometheus 9090:9090
+kubectl port-forward svc/prometheus-kube-prometheus-prometheus 9090:9090
+<!-- kubectl port-forward svc/tutorial-kube-prometheus-prometheus 9090:9090 -->
 website - http://localhost:9090
 
 ### Grafana
