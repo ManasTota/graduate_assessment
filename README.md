@@ -9,6 +9,11 @@ This project demonstrates
 * Established a CI/CD Pipeline using GitHub Actions
 
 
+## Architecture
+
+![Architecture]()
+
+
 ## Makefile
 A [Makefile](https://github.com/ManasTota/graduate_assessment/blob/main/makefile) is provided to automate common tasks like building, tagging, pushing Docker images, and deploying to Kubernetes.
 
