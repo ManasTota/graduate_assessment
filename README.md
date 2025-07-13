@@ -88,10 +88,12 @@ Tags the local ```flask-app``` image with the full path to your Artifact Registr
 
     docker tag flask-app europe-north2-docker.pkg.dev/ericsson-project-465613/ericsson/flask-app:latest
 
+
 #### 3. Authenticate Docker
 Configures Docker to use gcloud credentials for pushing/pulling images from Artifact Registry.
     
     gcloud auth configure-docker europe-north2-docker.pkg.dev
+
 
 #### 4. Pushing Docker Image
 Pushes the tagged Docker image to the Artifact Registry.
