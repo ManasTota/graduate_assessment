@@ -1,19 +1,24 @@
-name: Push to Artifact Registry
+name: CI/CD - Build, Push to Artifact Registry, and Deploy to GKE
 
 on:
-    push:
-      branches: [ "main" ]
+  push:
+    branches: [ "main" ]
 
 env:
   IMAGE_NAME: 'flask-app'
   PROJECT_ID: 'ericsson-project-465613'
   AR_REPO_LOCATION: 'europe-north2'
   AR_URL: 'europe-north2-docker.pkg.dev/ericsson-project-465613/ericsson'
-  SERVICE_ACCOUNT: 'github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com' 
+  SERVICE_ACCOUNT: 'github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com'
   WORKLOAD_IDENTITY_PROVIDER: 'projects/1086847771245/locations/global/workloadIdentityPools/flask-app-dev-pool/providers/github-actions-provider'
+  GKE_CLUSTER_NAME: 'ericsson-task-cluster' # <--- IMPORTANT: Replace with your GKE cluster name
+  GKE_CLUSTER_ZONE_OR_REGION: 'europe-north2' # <--- IMPORTANT: Replace with your GKE cluster zone/region
+  K8S_NAMESPACE: 'default' # <--- IMPORTANT: Replace if your deployment is in a different namespace
+  K8S_DEPLOYMENT_NAME: 'flask-app' # <--- IMPORTANT: Replace with your Kubernetes Deployment name
+  K8S_CONTAINER_NAME: 'flask-app' # <--- IMPORTANT: Replace with the name of the container in your deployment that holds the flask-app image
 
 jobs:
-  push_to_ar:
+  build_and_push_to_ar: # Renamed job for clarity
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -43,4 +48,33 @@ jobs:
       - name: Build and Push Container
         run: |-
           docker build -t "${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" ./
-          docker push "${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          docker push "${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+
+  deploy_to_gke:
+    needs: build_and_push_to_ar # This job depends on the previous job succeeding
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Google Auth for GKE
+        id: auth_gke
+        uses: 'google-github-actions/auth@v2'
+        with:
+          token_format: 'access_token'
+          project_id: ${{ env.PROJECT_ID }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+
+      - name: Get GKE Credentials
+        uses: 'google-github-actions/get-gke-credentials@v2'
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER_NAME }}
+          location: ${{ env.GKE_CLUSTER_ZONE_OR_REGION }}
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Deploy to GKE
+        run: |-
+          kubectl config use-context gke_${{ env.PROJECT_ID }}_${{ env.GKE_CLUSTER_ZONE_OR_REGION }}_${{ env.GKE_CLUSTER_NAME }}
+          kubectl set image deployment/${{ env.K8S_DEPLOYMENT_NAME }} ${{ env.K8S_CONTAINER_NAME }}=${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }} -n ${{ env.K8S_NAMESPACE }}

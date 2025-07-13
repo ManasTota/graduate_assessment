@@ -215,3 +215,14 @@ gcloud iam workload-identity-pools providers update-oidc \
 
 Output:
 name: projects/1086847771245/locations/global/workloadIdentityPools/flask-app-dev-pool/providers/github-actions-provider/operations/bigar7h2zxbqmehy7hzm2aq000000000
+
+
+### GKE permissions
+gcloud projects add-iam-policy-binding ericsson-project-465613 \
+    --member="serviceAccount:github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com" \
+    --role="roles/container.developer"
+
+### GKE node reader permissions
+gcloud projects add-iam-policy-binding ericsson-project-465613 \
+    --member="serviceAccount:github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com" \
+    --role="roles/artifactregistry.reader"
