@@ -218,11 +218,12 @@ Created ```prometheus_query.py``` using
 
 ## Task 5 - CI/CD Pipeline Github Actions
 
-### GitHub Actions Workflow [.github/workflows/cicd.yml](https://github.com/ManasTota/graduate_assessment/blob/main/.github/workflows/cicd.yml)
+### GitHub Actions Workflow (.github/workflows/cicd.yml)
 CI/CD - Build, Push to Artifact Registry, and Deploy to GKE
 
 * How the pipeline is triggered:
   * Typically, the pipeline is triggered on ```push``` events into ```main``` branch
+  * [Code](https://github.com/ManasTota/graduate_assessment/blob/main/.github/workflows/cicd.yml)
 
 ### OIDC Authentication
 
