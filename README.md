@@ -1,15 +1,24 @@
-# graduate_assessment
-Ericsson Graduate Assessment Project
+# Ericsson Graduate Assessment Project Documentation
+This project demonstrates 
+
+* Simple CRUD Application - Task Manager
+* Python Flask + PostgreSQL DB
+* Deployed on Google Kubernetes Engine (GKE)
+* Incorporated monitoring using Prometheus and Grafana
+* Includes Shell and Python scripting
+* Established a CI/CD Pipeline using GitHub Actions
 
 
-# Installed Google Cloud CLI using
+## Task 1 - Build a Kubernetes Cluster
 
+### Installing Google Cloud CLI
+```
 (New-Object Net.WebClient).DownloadFile("https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe", "$env:Temp\GoogleCloudSDKInstaller.exe")
 
 & $env:Temp\GoogleCloudSDKInstaller.exe
+```
 
-
-# Created a K8s cluster using
+### Creating a GKE cluster
 ```
 gcloud container clusters create ericsson-task-cluster \
     --zone europe-north2-c \
@@ -20,211 +29,294 @@ gcloud container clusters create ericsson-task-cluster \
     --max-nodes 3
 ```
 
-# Gcloud Auth Plugin
+### Install GKE Gcloud Auth Plugin
+```
 gcloud components install gke-gcloud-auth-plugin
+```
 
 
+## Task 2 - Simple CRUD Application
 
-# docker with postgres and poetry
-docker run --name taskmaster \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_DB=mydb \
-  -p 5431:5432 \
-  -d postgres
+### Docker
+#### 1. Creating PostgreSQL in a Docker container
+    
+    docker run --name taskmaster \
+      -e POSTGRES_PASSWORD=postgres \
+      -e POSTGRES_USER=postgres \
+      -e POSTGRES_DB=mydb \
+      -p 5432:5432 \
+      -d postgres
+    
 
+#### 2. Dockerfile
+    We have the Dockerfile here
 
-# Dockerfile - build and run
-
-### Building docker image
+#### 3. Building Dockerfile and running locally
+Building docker image
+```
 docker build -t flask-app .
+```
 
-### Running the docker image
+Running the docker image
+```
 docker run --env-file flask_app/.env -p 5000:5000 flask-app
+```
 
+### Google Artifact Registry Integration
 
+#### 1. Creating a repo
+Creates a Docker repository named ```ericsson``` in the ```europe-north2``` region
 
+    gcloud artifacts repositories create ericsson --repository-format=docker --location=europe-north2 --description="Ericsson task repository"
 
+#### 2. Taging Docker image
+Tags the local ```flask-app``` image with the full path to your Artifact Registry.
 
-# Creating a Google Artifact Repository
+    docker tag flask-app europe-north2-docker.pkg.dev/ericsson-project-465613/ericsson/flask-app:latest
 
-### Creating a repo
-gcloud artifacts repositories create ericsson --repository-format=docker --location=europe-north2 --description="Ericsson task repository"
+#### 3. Authenticate Docker
+Configures Docker to use gcloud credentials for pushing/pulling images from Artifact Registry.
+    
+    gcloud auth configure-docker europe-north2-docker.pkg.dev
 
-### Taging Docker image
-docker tag flask-app europe-north2-docker.pkg.dev/ericsson-project-465613/ericsson/flask-app:latest
+#### 4. Pushing Docker Image
+Pushes the tagged Docker image to the Artifact Registry.
 
-### Auth
-gcloud auth configure-docker europe-north2-docker.pkg.dev
+    docker push europe-north2-docker.pkg.dev/ericsson-project-465613/ericsson/flask-app:latest
 
-### Pushing image
-docker push europe-north2-docker.pkg.dev/ericsson-project-465613/ericsson/flask-app:latest
 
+### Kubernetes Deployment
 
+#### 1. Create Secrets
+Creates a Kubernetes Secret named ```app-secrets``` from key-value pairs from an ```.env.deployment``` file
 
-# K8s
+    kubectl create secret generic app-secrets --from-env-file=.env.deployment
 
-### Build and Run deployments.yaml
-kubectl apply -f deployment.yaml
-kubectl get svc --> use external ip and port for flask app
+Example ```.env.deployment``` file
 
-### Creating Secrets file using .env
-kubectl create secret generic app-secrets --from-env-file=.env.deployment
+    POSTGRES_USER=postgres
+    POSTGRES_PASSWORD=postgres
+    POSTGRES_DB=mydb
+    POSTGRES_HOST=taskmaster
+    POSTGRES_PORT=5432
 
 
+#### 2. Kubernetes Manifests
 
-# Created Makefile
-using all the important commands from above - like Build, tag, push, deploy etc
+We have Kubernetes Manifests like ```deployment.yaml```
 
+#### 3. Applying Manifests
 
+    kubectl apply -f deployment.yaml
 
+#### 4. Accessing the Frontend Service
+As we are using GKE with a LoadBalancer. We have the application running at ```flask-app-external-ip:port```
 
-# Helm for Prometheus and Grafana
+    kubectl get svc
 
-### Installing prometheus
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
+We have flask app running at ```http://34.51.213.66:5000```
 
-### Adding promethues 
-helm install prometheus prometheus-community/kube-prometheus-stack --values k8s/values_prometheus.yaml
 
-<!-- helm install tutorial bitnami/kube-prometheus --version 8.2.2 --values k8s/values_prometheus.yaml -->
+## Task 3 - Monitoring with Prometheus & Grafana
 
+### 1. Installing Prometheus and Grafana
 
-# Accessing Prometheus and Grafana
+#### Installing Prometheus
 
-### Promotheus
-kubectl port-forward svc/prometheus-kube-prometheus-prometheus 9090:9090
-<!-- kubectl port-forward svc/tutorial-kube-prometheus-prometheus 9090:9090 -->
-website - http://localhost:9090
+    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    helm repo update
 
-### Grafana
-kubectl port-forward svc/prometheus-grafana 3000:80
-website - http://localhost:3000
-username - admin
-password - admin123
+#### Installs the ```kube-prometheus-stack``` chart from the ```prometheus-community``` repository.
 
+#### It uses a custom ```values_prometheus.yaml``` file to override default configurations.
 
+    helm install prometheus prometheus-community/kube-prometheus-stack --values k8s/values_prometheus.yaml
 
+#### Grafana will automatically get installed from the above commands
 
+### 2. Accessing Prometheus and Grafana UI
 
+* #### Prometheus UI
+  Forwards local port 9090 to the Prometheus service's port 9090.
 
-# Task 4 - Shell scripting and Python automation
+  Access Prometheus at ```http://localhost:9090```
 
-### Monitoring - moniter.sh
-chmod +x moniter.sh
-./monitoring/moniter.sh [pod_name]
+      kubectl port-forward svc/prometheus-kube-prometheus-prometheus 9090:9090
 
+* #### Grafana UI
+  Forwards local port 3000 to the Grafana service's port 80.
 
-### Prometheus_query.py
+  Access Grafana at ```http://localhost:3000```
 
-#### First make sure prometheus is running in http://localhost:9090
-kubectl port-forward svc/tutorial-kube-prometheus-prometheus 9090:9090
+      kubectl port-forward svc/prometheus-grafana 3000:80
 
-#### Run the py script
-python monitoring/prometheus_query.py [pod_name]
+  * Default credentials: 
 
+    username - ```admin```
 
+    password - ```admin123```
 
 
-# Task 5 - CI/CD Pipeline Jenkins
 
-### Insalling Jenkins via Helm
-helm repo add jenkins https://charts.jenkins.io
-helm repo update
+## Task 4 - Shell Scripting and Python Automation
 
-helm install jenkins jenkins/jenkins -f k8s/jenkins_values.yaml --wait
+### Shell - monitor.sh
+Created ```monitor.sh``` to 
+* Check memory & CPU usage of a pod
+* Alert if usage exceeds threshold
 
-Get your 'admin' user password by running:
-kubectl exec --namespace default $(kubectl get pods --namespace default -l app.kubernetes.io/component=jenkins-controller -o jsonpath='{.items[0].metadata.name}') -- sh -c 'cat /run/secrets/additional/chart-admin-password'
+      chmod +x monitoring/monitor.sh
 
-Username = admin
-PWD = AFfOaYWg8iyfNM6j9ZtbF3
+      ./monitoring/monitor.sh [pod_name]
 
-accessing jenkins
-externalip:8080
+#### Example outputs
 
+Normal case
 
+    Checking resource usage for pod: flask-app-858c74c57f-k7ndn
+    ✅ Monitoring completed.
 
+Alerting (if exceeeds) 
 
-# Create service account for ci cd artifact
-gcloud iam service-accounts create github-actions-service-account \
- --description="A service account for use in a GitHub Actions workflow" \
- --display-name="GitHub Actions service account."
+    Checking resource usage for pod: flask-app-858c74c57f-k7ndn
+    ⚠️ Memory usage alert for flask-app-858c74c57f-k7ndn: 30Mi exceeds 10Mi
+    ✅ Monitoring completed.
 
 
-### adding permission to service account
-gcloud artifacts repositories add-iam-policy-binding ericsson \
-  --location=europe-north2 \
-  --role=roles/artifactregistry.createOnPushWriter \
-  --member=serviceAccount:github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com
+### Python - prometheus_query.py
+Created ```prometheus_query.py``` using
+* Query Prometheus API
+* Return current CPU usage of a pod in JSON
 
-### Create a workload identity pool
-gcloud iam workload-identity-pools create "flask-app-dev-pool" \
-  --project=ericsson-project-465613 \
-  --location=global \
-  --display-name="Identity pool for my flask app"
+      python monitoring/prometheus_query.py [pod_name]
 
+#### Example output - json format
 
-### Create a workload identity pool provider
-gcloud iam workload-identity-pools providers create-oidc "github-actions-provider" \
-  --location="global" \
-  --workload-identity-pool="flask-app-dev-pool" \
-  --display-name="Provider for GitHub Actions" \
-  --issuer-uri="https://token.actions.githubusercontent.com" \
-  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
-  --attribute-condition="attribute.repository_owner=='ManasTota' && attribute.repository=='graduate_assessment'"
+```
+[
+  {
+    "namespace": "default",
+    "pod": "flask-app-858c74c57f-k7ndn",
+    "cpu_usage_cores": 0.00066727,
+    "memory_usage_bytes": 34684928.0
+  }
+]
+```
 
-### describing identity pool
-gcloud iam workload-identity-pools providers describe github-actions-provider \
-  --location=global \
-  --workload-identity-pool="flask-app-dev-pool"
 
-output:
-name: projects/1086847771245/locations/global/workloadIdentityPools/flask-app-dev-pool/providers/github-actions-provider
+### ```Note``` : Ensure ```Prometheus``` is running before running the above scripts i.e.
 
-### grant the Service Account Token Creator via a gmail
-gcloud iam service-accounts add-iam-policy-binding \
-  github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com \
-  --role=roles/iam.serviceAccountTokenCreator \
-  --member=user:nantota87@gmail.com
+    # Port-forward Prometheus UI
+    kubectl port-forward svc/prometheus-kube-prometheus-prometheus 9090:9090
 
-### describing pool
-gcloud iam workload-identity-pools describe "flask-app-dev-pool" \
-  --location=global
 
-output:
-name: projects/1086847771245/locations/global/workloadIdentityPools/flask-app-dev-pool
+## Task 5 - CI/CD Pipeline Github Actions
 
-### exporting as env
-export WIP_POOL=projects/1086847771245/locations/global/workloadIdentityPools/flask-app-dev-pool
+### GitHub Actions Workflow (.github/workflows/cicd.yml)
+CI/CD - Build, Push to Artifact Registry, and Deploy to GKE
 
+* How the pipeline is triggered:
+  * Typically, the pipeline is triggered on ```push``` events into ```main``` branch
 
-### binding
-gcloud iam service-accounts add-iam-policy-binding \
-  github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com \
-  --role=roles/iam.workloadIdentityUser \
-  --member=principalSet://iam.googleapis.com/${WIP_POOL}/attribute.repository/ManasTota/graduate_assessment
+### OIDC Authentication
 
+"Cloud Workload Identity Federation" is the broader Google Cloud service that enables external identities (like those from GitHub Actions) to authenticate to Google Cloud resources. OpenID Connect (OIDC) is the specific protocol that Workload Identity Federation uses to achieve this.
 
-### updating oidc for final check
-gcloud iam workload-identity-pools providers update-oidc \
-  github-actions-provider \
-  --project=ericsson-project-465613 \
-  --location=global \
-  --workload-identity-pool=flask-app-dev-pool \
-  --attribute-condition="assertion.repository_owner == 'ManasTota'"
+### 1. Create a Service Account
 
-Output:
-name: projects/1086847771245/locations/global/workloadIdentityPools/flask-app-dev-pool/providers/github-actions-provider/operations/bigar7h2zxbqmehy7hzm2aq000000000
+    gcloud iam service-accounts create github-actions-service-account \
+    --description="A service account for use in a GitHub Actions workflow" \
+    --display-name="GitHub Actions service account."
 
 
-### GKE permissions
-gcloud projects add-iam-policy-binding ericsson-project-465613 \
-    --member="serviceAccount:github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com" \
-    --role="roles/container.developer"
+### 2. Grant Artifact Registry Push Permissions
+This allows the service account to push Docker images to your Artifact Registry.
 
-### GKE node reader permissions
-gcloud projects add-iam-policy-binding ericsson-project-465613 \
-    --member="serviceAccount:github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com" \
-    --role="roles/artifactregistry.reader"
+    gcloud artifacts repositories add-iam-policy-binding ericsson \
+      --location=europe-north2 \
+      --role=roles/artifactregistry.createOnPushWriter \
+      --member=serviceAccount:github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com
+
+### 3. Create a Workload Identity Pool
+A pool is a collection of external identities that are trusted to access your Google Cloud resource
+
+    gcloud iam workload-identity-pools create "flask-app-dev-pool" \
+      --project=ericsson-project-465613 \
+      --location=global \
+      --display-name="Identity pool for my flask app"
+
+
+### 4. Create a Workload Identity Pool Provider
+This provider links your GitHub Actions OIDC (OpenID Connect) issuer to the identity pool.
+
+    gcloud iam workload-identity-pools providers create-oidc "github-actions-provider" \
+      --location="global" \
+      --workload-identity-pool="flask-app-dev-pool" \
+      --display-name="Provider for GitHub Actions" \
+      --issuer-uri="https://token.actions.githubusercontent.com" \
+      --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
+      --attribute-condition="attribute.repository_owner=='ManasTota' && attribute.repository=='graduate_assessment'"
+
+### 5. Describing Identity Pool Provider
+
+    gcloud iam workload-identity-pools providers describe github-actions-provider \
+      --location=global \
+      --workload-identity-pool="flask-app-dev-pool"
+
+```output```:
+
+    name: projects/1086847771245/locations/global/workloadIdentityPools/flask-app-dev-pool/providers/github-actions-provider
+
+### 6. Grant the Service Account Token Creator via a gmail
+
+    gcloud iam service-accounts add-iam-policy-binding \
+      github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com \
+      --role=roles/iam.serviceAccountTokenCreator \
+      --member=user:nantota87@gmail.com
+
+### 7. Describing the Flask app Pool
+
+    gcloud iam workload-identity-pools describe "flask-app-dev-pool" \
+      --location=global
+
+```output```:
+
+    name: projects/1086847771245/locations/global/workloadIdentityPools/flask-app-dev-pool
+
+exporting as env var
+
+    export WIP_POOL=projects/1086847771245/locations/global/workloadIdentityPools/flask-app-dev-pool
+
+
+### 8. Grant Workload Identity User Role:
+This binding allows the GitHub Actions identity (from the specific repository) to impersonate your Google Cloud service account
+
+    gcloud iam service-accounts add-iam-policy-binding \
+      github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com \
+      --role=roles/iam.workloadIdentityUser \
+      --member=principalSet://iam.googleapis.com/${WIP_POOL}/attribute.repository/ManasTota/graduate_assessment
+
+
+### 9. Updating OIDC Permissions:
+
+    gcloud iam workload-identity-pools providers update-oidc \
+      github-actions-provider \
+      --project=ericsson-project-465613 \
+      --location=global \
+      --workload-identity-pool=flask-app-dev-pool \
+      --attribute-condition="assertion.repository_owner == 'ManasTota'"
+
+
+### 10. Grant GKE Developer Permissions:
+This role allows the service account to deploy and manage resources in your GKE cluster.
+
+    gcloud projects add-iam-policy-binding ericsson-project-465613 \
+        --member="serviceAccount:github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com" \
+        --role="roles/container.developer"
+
+### 11. Grant Artifact Registry Reader Permissions:
+This allows the GKE nodes (when pulling images for deployments) to read images from your Artifact Registry.
+
+    gcloud projects add-iam-policy-binding ericsson-project-465613 \
+        --member="serviceAccount:github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com" \
+        --role="roles/artifactregistry.reader"
