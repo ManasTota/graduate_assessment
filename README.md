@@ -11,7 +11,7 @@ This project demonstrates
 
 ## Architecture
 
-![Architecture]()
+![Architecture](https://github.com/ManasTota/graduate_assessment/blob/main/imgs/architecture.png)
 
 
 ## Makefile
