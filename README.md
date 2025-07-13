@@ -46,7 +46,7 @@ gcloud components install gke-gcloud-auth-plugin
 
 
 ## Task 2 - Simple CRUD Application
-### Created ```Task Manager``` Application
+### Created ```Task Manager``` Application - http://34.51.213.66:5000
 * Frontend and Backend - ```Python Flask```
 * Database - ```PostgreSQL```
 * [Code](https://github.com/ManasTota/graduate_assessment/blob/main/flask_app/app.py)
