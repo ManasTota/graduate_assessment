@@ -50,10 +50,15 @@ gcloud components install gke-gcloud-auth-plugin
 * Frontend and Backend - ```Python Flask```
 * Database - ```PostgreSQL```
 * [Code](https://github.com/ManasTota/graduate_assessment/blob/main/flask_app/app.py)
+* [Video Drive link](https://drive.google.com/file/d/1db9ICi1gmgsh20OoQ4EcR98B1kU7gK7U/view?usp=drive_link)
 
 
 
-https://github.com/user-attachments/assets/5c1913f6-965e-4abf-a4aa-9ca126e22e97
+
+
+https://github.com/user-attachments/assets/8c583e7f-98f4-4c60-968b-f9f9f77fe2f9
+
+
 
 
 
@@ -249,6 +254,11 @@ CI/CD - Build, Push to Artifact Registry, and Deploy to GKE
 * How the pipeline is triggered:
   * Typically, the pipeline is triggered on ```push``` events into ```main``` branch
   * [Code](https://github.com/ManasTota/graduate_assessment/blob/main/.github/workflows/cicd.yml)
+  * [Video drive link](https://drive.google.com/file/d/1PATaijuRCVmYLX85j9STBSlYwuFN0E_B/view?usp=drive_link)
+ 
+
+
+
 
 ### OIDC Authentication
 
