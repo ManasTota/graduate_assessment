@@ -10,6 +10,7 @@ Ericsson Graduate Assessment Project
 
 
 # Created a K8s cluster using
+```
 gcloud container clusters create ericsson-task-cluster \
     --zone europe-north2-c \
     --num-nodes 2 \
@@ -17,6 +18,7 @@ gcloud container clusters create ericsson-task-cluster \
     --enable-autoscaling \
     --min-nodes 2 \
     --max-nodes 3
+```
 
 # Gcloud Auth Plugin
 gcloud components install gke-gcloud-auth-plugin
