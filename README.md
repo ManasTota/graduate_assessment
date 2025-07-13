@@ -174,6 +174,10 @@ We have flask app running at ```http://34.51.213.66:5000```
 
 
 ![Prometheus1](https://github.com/ManasTota/graduate_assessment/blob/main/imgs/Prometheus1.png)
+![Prometheus2](https://github.com/ManasTota/graduate_assessment/blob/main/imgs/Prometheus2.png)
+![Grafana1](https://github.com/ManasTota/graduate_assessment/blob/main/imgs/Grafana1.png)
+![Grafana2](https://github.com/ManasTota/graduate_assessment/blob/main/imgs/Grafana2.png)
+
 
 
 ## Task 4 - Shell Scripting and Python Automation
