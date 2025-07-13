@@ -259,6 +259,10 @@ CI/CD - Build, Push to Artifact Registry, and Deploy to GKE
 
 
 
+https://github.com/user-attachments/assets/360b88dc-c7b2-4634-afde-a03f51873ed0
+
+
+
 
 ### OIDC Authentication
 
