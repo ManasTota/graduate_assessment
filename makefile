@@ -15,7 +15,11 @@ HELM_CHART_NAME := prometheus-community/kube-prometheus-stack
 
 .PHONY: all build tag push deploy create-secrets delete-secrets clean
 
-all: build tag push deploy ## Builds, tags, pushes the Docker image, and applies the Kubernetes deployment
+all: install_helm build tag push deploy ## Install Helm, Builds, tags, pushes the Docker image, and applies the Kubernetes deployment
+
+install_helm: ## Install the Prometheus/Grafana stack using Helm
+	@echo "--- Installing Helm chart: $(HELM_CHART_NAME) with release name $(HELM_RELEASE_NAME) ---"
+	helm install $(HELM_RELEASE_NAME) $(HELM_CHART_NAME) --values $(PROMETHEUS_VALUES_FILE)
 
 build: ## Builds the Docker image
 	@echo "--- Building Docker image: $(IMAGE_NAME) ---"
@@ -32,11 +36,6 @@ push: ## Pushes the Docker image to the registry
 deploy: ## Applies the Kubernetes deployment
 	@echo "--- Applying Kubernetes deployment: $(DEPLOYMENT_FILE) ---"
 	kubectl apply -f $(DEPLOYMENT_FILE)
-
-# 	@echo "--- Installing Helm chart: $(HELM_CHART_NAME) with release name $(HELM_RELEASE_NAME) ---"
-# 	# Install the Prometheus/Grafana stack using Helm
-# 	# --wait ensures that all resources are in a ready state before the command exits
-# 	helm install $(HELM_RELEASE_NAME) $(HELM_CHART_NAME) --values $(PROMETHEUS_VALUES_FILE) --wait
 
 	@echo "--- Applying Postgres Exporter deployment: $(POSTGRES_EXPORTER_FILE) ---"
 	# Apply the Postgres Exporter deployment
@@ -65,4 +64,3 @@ clean: ## Deletes the Kubernetes deployment and secrets
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-

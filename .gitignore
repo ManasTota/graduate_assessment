@@ -26,3 +26,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Random Testing files (Additional files)
+run.sh
