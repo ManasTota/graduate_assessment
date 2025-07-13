@@ -1,0 +1,20 @@
+# jenkins-values.yaml
+controller:
+  # Configure persistence for Jenkins data
+  persistence:
+    enabled: true
+    size: 8Gi # Adjust size as needed, e.g., 10Gi, 20Gi
+    storageClassName: standard # Use your cluster's default StorageClass or specify one (e.g., 'ssd' for GKE)
+  
+  # Optionally, set resource limits if you know your requirements
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"
+
+  # Optionally, configure service type for external access (NodePort or LoadBalancer)
+  # For initial setup, NodePort is often easier, then switch to LoadBalancer for production.
+  serviceType: LoadBalancer # Or NodePort if you prefer
