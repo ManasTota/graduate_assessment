@@ -11,8 +11,14 @@ This project demonstrates
 
 ## Architecture
 
-![Architecture](https://github.com/ManasTota/graduate_assessment/blob/main/imgs/architecture.png)
+![Architecture](imgs/architecture.png)
 
+### Master vs Worker nodes
+In our GKE cluster:
+
+* Control Plane (Managed by GKE): The "brain" of the cluster, responsible for managing its state and orchestrating workloads. It includes the API Server, Scheduler, Controller Manager, and etcd. GKE handles its operations.
+
+* Worker Nodes (e.g., Worker node1, Worker node2): These are the machines where our applications (Flask App + PostgreSQL DB) actually run. Each node contains Kubelet (agent managing pods), Kube-proxy (network proxy), and Containerd (container runtime).
 
 ## Makefile
 A [Makefile](https://github.com/ManasTota/graduate_assessment/blob/main/makefile) is provided to automate common tasks like building, tagging, pushing Docker images, and deploying to Kubernetes.
