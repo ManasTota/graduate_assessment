@@ -9,6 +9,16 @@ This project demonstrates
 * Established a CI/CD Pipeline using GitHub Actions
 
 
+## Makefile
+A [Makefile](https://github.com/ManasTota/graduate_assessment/blob/main/makefile) is provided to automate common tasks like building, tagging, pushing Docker images, and deploying to Kubernetes.
+
+### Commands to be used
+
+#### 1. ```make clean``` - Clean and delete everything (pods, services etc)
+#### 2. ```make all``` - Create everything (Build, Install, Push, Deploy)
+
+
+
 ## Task 1 - Build a Kubernetes Cluster
 
 ### Installing Google Cloud CLI
