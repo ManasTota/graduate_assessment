@@ -60,7 +60,7 @@ clean: ## Deletes the Kubernetes deployment and secrets
 	@echo "--- Deleting Postgres Exporter deployment: $(POSTGRES_EXPORTER_FILE) ---"
 	# Delete the Postgres Exporter deployment
 	kubectl delete -f $(POSTGRES_EXPORTER_FILE) || true
-# 	$(MAKE) delete-secrets
+ 	$(MAKE) delete-secrets
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

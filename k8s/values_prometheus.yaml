@@ -39,17 +39,6 @@ grafana:
     enabled: true
     size: 1Gi
   
-  # REMOVE OR COMMENT OUT THIS ENTIRE 'datasources' SECTION
-  # Configure datasources
-  # datasources:
-  #   datasources.yaml:
-  #     apiVersion: 1
-  #     datasources:
-  #       - name: Prometheus
-  #         type: prometheus
-  #         url: http://prometheus-server:9090
-  #         access: proxy
-  #         isDefault: true
   
   # Import default dashboards
   dashboardProviders:
@@ -70,7 +59,7 @@ grafana:
     default:
       flask-app-dashboard:
         gnetId: 0
-        datasource: Prometheus # Make sure this matches the name of the *chart-provisioned* Prometheus datasource
+        datasource: Prometheus
         json: |
           {
             "dashboard": {
@@ -175,19 +164,6 @@ alertmanager:
               Description: {{ .Annotations.description }}
               {{ end }}
 
-# alertmanager:
-#   resources:
-#     limits:
-#       cpu: 250m
-#       ephemeral-storage: 1Gi
-#       memory: 512Mi
-#     requests:
-#       cpu: 250m
-#       ephemeral-storage: 1Gi
-#       memory: 512Mi
-#   configSelector:
-#     matchLabels:
-#       alertmanagerConfig: slack
 
 # Custom alerting rules
 additionalPrometheusRulesMap:

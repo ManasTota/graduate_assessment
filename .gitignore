@@ -31,3 +31,4 @@ Thumbs.db
 run.sh
 hog.sh
 DOCUMENTATION.md
+k8s/jenkins_values.yaml

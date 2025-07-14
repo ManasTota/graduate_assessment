@@ -11,14 +11,14 @@ env:
   AR_URL: 'europe-north2-docker.pkg.dev/ericsson-project-465613/ericsson'
   SERVICE_ACCOUNT: 'github-actions-service-account@ericsson-project-465613.iam.gserviceaccount.com'
   WORKLOAD_IDENTITY_PROVIDER: 'projects/1086847771245/locations/global/workloadIdentityPools/flask-app-dev-pool/providers/github-actions-provider'
-  GKE_CLUSTER_NAME: 'ericsson-task-cluster' # <--- IMPORTANT: Replace with your GKE cluster name
-  GKE_CLUSTER_ZONE_OR_REGION: 'europe-north2-c' # <--- IMPORTANT: Replace with your GKE cluster zone/region
-  K8S_NAMESPACE: 'default' # <--- IMPORTANT: Replace if your deployment is in a different namespace
-  K8S_DEPLOYMENT_NAME: 'flask-app' # <--- IMPORTANT: Replace with your Kubernetes Deployment name
-  K8S_CONTAINER_NAME: 'flask-app' # <--- IMPORTANT: Replace with the name of the container in your deployment that holds the flask-app image
+  GKE_CLUSTER_NAME: 'ericsson-task-cluster'
+  GKE_CLUSTER_ZONE_OR_REGION: 'europe-north2-c'
+  K8S_NAMESPACE: 'default' 
+  K8S_DEPLOYMENT_NAME: 'flask-app'
+  K8S_CONTAINER_NAME: 'flask-app'
 
 jobs:
-  build_and_push_to_ar: # Renamed job for clarity
+  build_and_push_to_ar:
     permissions:
       contents: 'read'
       id-token: 'write'

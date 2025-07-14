@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="/root/.local/bin:$PATH"
 
-# Copy your app (including pyproject.toml and poetry.lock)
+# Copy app (including pyproject.toml and poetry.lock)
 COPY flask_app/ .
 
 # Install dependencies
